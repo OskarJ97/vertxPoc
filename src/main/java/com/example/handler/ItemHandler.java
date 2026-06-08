@@ -1,0 +1,53 @@
+package com.example.handler;
+
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.ext.mongo.MongoClient;
+import io.vertx.ext.web.RoutingContext;
+
+import java.util.UUID;
+
+public class ItemHandler {
+
+    private final MongoClient mongoClient;
+
+    public ItemHandler(MongoClient mongoClient) {
+        this.mongoClient = mongoClient;
+    }
+
+    public void create(RoutingContext ctx) {
+        String userId = ctx.user().principal().getString("sub");
+        JsonObject body = ctx.body().asJsonObject();
+        if (body == null || !body.containsKey("name")) {
+            ctx.response().setStatusCode(400).end("Missing name");
+            return;
+        }
+
+        JsonObject item = new JsonObject()
+            .put("_id", UUID.randomUUID().toString())
+            .put("owner", userId)
+            .put("name", body.getString("name"));
+
+        mongoClient.insert("items", item)
+            .onSuccess(id -> ctx.response().setStatusCode(204).end())
+            .onFailure(err -> ctx.response().setStatusCode(500).end(err.getMessage()));
+    }
+
+    public void list(RoutingContext ctx) {
+        String userId = ctx.user().principal().getString("sub");
+
+        mongoClient.find("items", new JsonObject().put("owner", userId))
+            .onSuccess(items -> {
+                JsonArray result = new JsonArray();
+                for (JsonObject item : items) {
+                    result.add(new JsonObject()
+                        .put("id", item.getString("_id"))
+                        .put("name", item.getString("name")));
+                }
+                ctx.response()
+                    .putHeader("Content-Type", "application/json")
+                    .end(result.encode());
+            })
+            .onFailure(err -> ctx.response().setStatusCode(500).end(err.getMessage()));
+    }
+}

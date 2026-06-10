@@ -43,14 +43,33 @@ Authorization header format: `Authorization: Bearer <token>`
 docker-compose up -d
 ```
 
-### 2. Build and run
+### 2. Prepare config
+
+Copy the example config and adjust values if needed:
+
+```bash
+cp config.example.json config.json
+```
+
+`config.json` - excluded from git to not share secret.
+
+### 3. Build and run
 
 ```bash
 mvn package
-java -jar target/vertx-microservice-1.0-SNAPSHOT.jar
+java -jar target/vertx-microservice-1.0-SNAPSHOT.jar -conf config.json
 ```
 
 Server starts on `http://localhost:3000`.
+
+### Running from IntelliJ
+
+`Run → Edit Configurations → + → Application`
+
+| Field              | Value                                        |
+|--------------------|----------------------------------------------|
+| Main class         | `io.vertx.core.Launcher`                     |
+| Program arguments  | `run com.example.MainVerticle -conf config.json` |
 
 ## Example requests
 
@@ -93,6 +112,6 @@ Default values work out of the box. Override via Vert.x config:
 - [ ] Zastąpić SHA-256 algorytmem BCrypt (odporny na rainbow tables, wbudowana sól)
 - [ ] Dodać HTTPS — HTTP przesyła hasło plaintextem przez sieć
 - [X] Nie zwracać `err.getMessage()` klientowi w błędach 500 — generyczny komunikat, szczegóły tylko w logach
-- [ ] Wymagać `jwt.secret` z konfiguracji zamiast mieć hardcoded default — fail fast przy starcie jeśli brak
+- [X] Wymagać `jwt.secret` z konfiguracji zamiast mieć hardcoded default — fail fast przy starcie jeśli brak
 - [ ] Dodać indeks unikalny na polu `login` w kolekcji `users` — teraz każdy login to full scan kolekcji
 - [ ] Walidacja inputu — minimalna długość hasła, limit rozmiaru pól, format loginu

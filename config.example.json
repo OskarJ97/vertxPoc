@@ -1,0 +1,5 @@
+{
+  "mongo.connection_string": "mongodb://localhost:27017",
+  "mongo.db_name": "microservice",
+  "jwt.secret": "change-me-to-a-secret-at-least-32-chars!"
+}

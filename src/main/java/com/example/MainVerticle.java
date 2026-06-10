@@ -5,6 +5,8 @@ import com.example.handler.ErrorHandler;
 import com.example.handler.ItemHandler;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.jwt.JWTAuth;
@@ -16,6 +18,8 @@ import io.vertx.ext.web.handler.JWTAuthHandler;
 
 public class MainVerticle extends AbstractVerticle {
 
+    private static final Logger log = LoggerFactory.getLogger(MainVerticle.class);
+
     @Override
     public void start(Promise<Void> startPromise) {
         JsonObject mongoConfig = new JsonObject()
@@ -24,10 +28,16 @@ public class MainVerticle extends AbstractVerticle {
 
         MongoClient mongoClient = MongoClient.create(vertx, mongoConfig);
 
+        String jwtSecret = config().getString("jwt.secret");
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            startPromise.fail("Missing required configuration: jwt.secret");
+            return;
+        }
+
         JWTAuth jwtAuth = JWTAuth.create(vertx, new JWTAuthOptions()
             .addPubSecKey(new PubSecKeyOptions()
                 .setAlgorithm("HS256")
-                .setBuffer(config().getString("jwt.secret", "super-secret-key-must-be-at-least-32-chars!"))));
+                .setBuffer(jwtSecret)));
 
         Router router = Router.router(vertx);
         router.route().handler(BodyHandler.create());

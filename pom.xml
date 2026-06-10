@@ -37,6 +37,11 @@
       <artifactId>vertx-auth-jwt</artifactId>
       <version>${vertx.version}</version>
     </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.4.14</version>
+    </dependency>
   </dependencies>
 
   <build>

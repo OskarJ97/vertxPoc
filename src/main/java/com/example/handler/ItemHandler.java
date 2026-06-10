@@ -1,5 +1,6 @@
 package com.example.handler;
 
+import com.example.exception.ValidationException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
@@ -19,7 +20,7 @@ public class ItemHandler {
         String userId = ctx.user().principal().getString("sub");
         JsonObject body = ctx.body().asJsonObject();
         if (body == null || !body.containsKey("name")) {
-            ctx.response().setStatusCode(400).end("Missing name");
+            ctx.fail(new ValidationException("Missing name"));
             return;
         }
 
@@ -30,7 +31,7 @@ public class ItemHandler {
 
         mongoClient.insert("items", item)
             .onSuccess(id -> ctx.response().setStatusCode(204).end())
-            .onFailure(err -> ctx.response().setStatusCode(500).end(err.getMessage()));
+            .onFailure(ctx::fail);
     }
 
     public void list(RoutingContext ctx) {
@@ -48,6 +49,6 @@ public class ItemHandler {
                     .putHeader("Content-Type", "application/json")
                     .end(result.encode());
             })
-            .onFailure(err -> ctx.response().setStatusCode(500).end(err.getMessage()));
+            .onFailure(ctx::fail);
     }
 }

@@ -92,7 +92,7 @@ Default values work out of the box. Override via Vert.x config:
 
 - [ ] Zastąpić SHA-256 algorytmem BCrypt (odporny na rainbow tables, wbudowana sól)
 - [ ] Dodać HTTPS — HTTP przesyła hasło plaintextem przez sieć
-- [ ] Nie zwracać `err.getMessage()` klientowi w błędach 500 — generyczny komunikat, szczegóły tylko w logach
+- [X] Nie zwracać `err.getMessage()` klientowi w błędach 500 — generyczny komunikat, szczegóły tylko w logach
 - [ ] Wymagać `jwt.secret` z konfiguracji zamiast mieć hardcoded default — fail fast przy starcie jeśli brak
 - [ ] Dodać indeks unikalny na polu `login` w kolekcji `users` — teraz każdy login to full scan kolekcji
 - [ ] Walidacja inputu — minimalna długość hasła, limit rozmiaru pól, format loginu

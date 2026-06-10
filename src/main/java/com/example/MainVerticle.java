@@ -1,6 +1,7 @@
 package com.example;
 
 import com.example.handler.AuthHandler;
+import com.example.handler.ErrorHandler;
 import com.example.handler.ItemHandler;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
@@ -41,6 +42,9 @@ public class MainVerticle extends AbstractVerticle {
         router.route("/items*").handler(JWTAuthHandler.create(jwtAuth));
         router.post("/items").handler(itemHandler::create);
         router.get("/items").handler(itemHandler::list);
+
+        ErrorHandler errorHandler = new ErrorHandler();
+        router.route().failureHandler(errorHandler::handle);
 
         vertx.createHttpServer()
             .requestHandler(router)

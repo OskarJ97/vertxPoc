@@ -1,5 +1,7 @@
 package com.example.handler;
 
+import com.example.exception.ConflictException;
+import com.example.exception.ValidationException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
@@ -25,7 +27,7 @@ public class AuthHandler {
     public void register(RoutingContext ctx) {
         JsonObject body = ctx.body().asJsonObject();
         if (body == null || !body.containsKey("login") || !body.containsKey("password")) {
-            ctx.response().setStatusCode(400).end("Missing login or password");
+            ctx.fail(new ValidationException("Missing login or password"));
             return;
         }
 
@@ -35,7 +37,7 @@ public class AuthHandler {
         mongoClient.findOne("users", new JsonObject().put("login", login), null)
             .onSuccess(existing -> {
                 if (existing != null) {
-                    ctx.response().setStatusCode(409).end("Login already taken");
+                    ctx.fail(new ConflictException("Login already taken"));
                     return;
                 }
                 JsonObject user = new JsonObject()
@@ -45,15 +47,15 @@ public class AuthHandler {
 
                 mongoClient.insert("users", user)
                     .onSuccess(id -> ctx.response().setStatusCode(204).end())
-                    .onFailure(err -> ctx.response().setStatusCode(500).end(err.getMessage()));
+                    .onFailure(ctx::fail);
             })
-            .onFailure(err -> ctx.response().setStatusCode(500).end(err.getMessage()));
+            .onFailure(ctx::fail);
     }
 
     public void login(RoutingContext ctx) {
         JsonObject body = ctx.body().asJsonObject();
         if (body == null || !body.containsKey("login") || !body.containsKey("password")) {
-            ctx.response().setStatusCode(400).end("Missing login or password");
+            ctx.fail(new ValidationException("Missing login or password"));
             return;
         }
 
@@ -63,7 +65,7 @@ public class AuthHandler {
         mongoClient.findOne("users", new JsonObject().put("login", login), null)
             .onSuccess(user -> {
                 if (user == null || !hashPassword(password).equals(user.getString("password"))) {
-                    ctx.response().setStatusCode(401).end("Invalid credentials");
+                    ctx.fail(new ValidationException("Invalid credentials"));
                     return;
                 }
 
@@ -77,7 +79,7 @@ public class AuthHandler {
                     .putHeader("Content-Type", "application/json")
                     .end(new JsonObject().put("token", token).encode());
             })
-            .onFailure(err -> ctx.response().setStatusCode(500).end(err.getMessage()));
+            .onFailure(ctx::fail);
     }
 
     private String hashPassword(String password) {

@@ -114,4 +114,4 @@ Default values work out of the box. Override via Vert.x config:
 - [X] Nie zwracać `err.getMessage()` klientowi w błędach 500 — generyczny komunikat, szczegóły tylko w logach
 - [X] Wymagać `jwt.secret` z konfiguracji zamiast mieć hardcoded default — fail fast przy starcie jeśli brak
 - [X] Dodać indeks unikalny na polu `login` w kolekcji `users` — teraz każdy login to full scan kolekcji
-- [ ] Walidacja inputu — minimalna długość hasła, limit rozmiaru pól, format loginu
+- [X] Walidacja inputu — minimalna długość hasła, limit rozmiaru pól, format loginu

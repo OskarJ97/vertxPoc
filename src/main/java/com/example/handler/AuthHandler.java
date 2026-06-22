@@ -2,6 +2,7 @@ package com.example.handler;
 
 import com.example.exception.ConflictException;
 import com.example.exception.ValidationException;
+import com.example.util.Validator;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
@@ -26,13 +27,21 @@ public class AuthHandler {
 
     public void register(RoutingContext ctx) {
         JsonObject body = ctx.body().asJsonObject();
-        if (body == null || !body.containsKey("login") || !body.containsKey("password")) {
-            ctx.fail(new ValidationException("Missing login or password"));
+        if (body == null) {
+            ctx.fail(new ValidationException("Request body is required"));
             return;
         }
 
         String login = body.getString("login");
         String password = body.getString("password");
+
+        try {
+            Validator.validateLogin(login);
+            Validator.validatePassword(password);
+        } catch (ValidationException e) {
+            ctx.fail(e);
+            return;
+        }
 
         mongoClient.findOne("users", new JsonObject().put("login", login), null)
             .onSuccess(existing -> {
@@ -54,13 +63,21 @@ public class AuthHandler {
 
     public void login(RoutingContext ctx) {
         JsonObject body = ctx.body().asJsonObject();
-        if (body == null || !body.containsKey("login") || !body.containsKey("password")) {
-            ctx.fail(new ValidationException("Missing login or password"));
+        if (body == null) {
+            ctx.fail(new ValidationException("Request body is required"));
             return;
         }
 
         String login = body.getString("login");
         String password = body.getString("password");
+
+        try {
+            Validator.validateLogin(login);
+            Validator.validatePassword(password);
+        } catch (ValidationException e) {
+            ctx.fail(e);
+            return;
+        }
 
         mongoClient.findOne("users", new JsonObject().put("login", login), null)
             .onSuccess(user -> {

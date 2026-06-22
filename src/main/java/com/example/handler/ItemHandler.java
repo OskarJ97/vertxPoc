@@ -1,6 +1,7 @@
 package com.example.handler;
 
 import com.example.exception.ValidationException;
+import com.example.util.Validator;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
@@ -19,8 +20,15 @@ public class ItemHandler {
     public void create(RoutingContext ctx) {
         String userId = ctx.user().principal().getString("sub");
         JsonObject body = ctx.body().asJsonObject();
-        if (body == null || !body.containsKey("name")) {
-            ctx.fail(new ValidationException("Missing name"));
+        if (body == null) {
+            ctx.fail(new ValidationException("Request body is required"));
+            return;
+        }
+
+        try {
+            Validator.validateItemName(body.getString("name"));
+        } catch (ValidationException e) {
+            ctx.fail(e);
             return;
         }
 

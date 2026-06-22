@@ -5,16 +5,17 @@ import com.example.handler.ErrorHandler;
 import com.example.handler.ItemHandler;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
+import io.vertx.ext.mongo.IndexOptions;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.web.handler.JWTAuthHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MainVerticle extends AbstractVerticle {
 
@@ -48,7 +49,6 @@ public class MainVerticle extends AbstractVerticle {
         router.post("/register").handler(authHandler::register);
         router.post("/login").handler(authHandler::login);
 
-        // All /items routes require a valid JWT
         router.route("/items*").handler(JWTAuthHandler.create(jwtAuth));
         router.post("/items").handler(itemHandler::create);
         router.get("/items").handler(itemHandler::list);
@@ -56,10 +56,18 @@ public class MainVerticle extends AbstractVerticle {
         ErrorHandler errorHandler = new ErrorHandler();
         router.route().failureHandler(errorHandler::handle);
 
-        vertx.createHttpServer()
-            .requestHandler(router)
-            .listen(3000)
-            .<Void>mapEmpty()
-            .onComplete(startPromise);
+        mongoClient.createIndexWithOptions(
+                "users",
+                new JsonObject().put("login", 1),
+                new IndexOptions().unique(true))
+            .onSuccess(v -> {
+                log.info("Index on users.login created (or already exists)");
+                vertx.createHttpServer()
+                    .requestHandler(router)
+                    .listen(3000)
+                    .<Void>mapEmpty()
+                    .onComplete(startPromise);
+            })
+            .onFailure(startPromise::fail);
     }
 }
